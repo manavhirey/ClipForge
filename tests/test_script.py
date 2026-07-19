@@ -54,6 +54,7 @@ def test_system_prompt_addresses_title_flair_and_duplicate_body_line():
     assert "AITA" in SYSTEM_PROMPT
     assert "expand it naturally" in SYSTEM_PROMPT
     assert "narrate it once" in SYSTEM_PROMPT
+    assert "flair tags like 'AITA'" not in SYSTEM_PROMPT
 
 
 def test_clean_script_raises_on_empty_response():
