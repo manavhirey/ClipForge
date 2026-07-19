@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .env
+.superpowers/
 output/
 assets/gameplay/*
 !assets/gameplay/.gitkeep
