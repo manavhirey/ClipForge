@@ -44,3 +44,13 @@ def test_render_raises_on_ffmpeg_failure(tmp_path):
             Path("bg.mp4"), 0.0, 10.0, Path("n.mp3"), Path("s.ass"),
             tmp_path / "out.mp4", runner=fake_runner,
         )
+
+
+def test_build_ffmpeg_command_escapes_special_characters_in_subtitles_path():
+    cmd = build_ffmpeg_command(
+        Path("bg.mp4"), 0.0, 10.0, Path("n.mp3"), Path("weird:path's.ass"), Path("out.mp4")
+    )
+
+    filter_complex = cmd[cmd.index("-filter_complex") + 1]
+
+    assert "ass='weird\\:path\\'s.ass'" in filter_complex
