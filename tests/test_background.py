@@ -11,7 +11,10 @@ def test_get_clip_duration_seconds_parses_ffprobe_output(monkeypatch):
     class FakeCompletedProcess:
         stdout = "12.345\n"
 
+    captured = {}
+
     def fake_run(cmd, capture_output, text, check):
+        captured["cmd"] = cmd
         return FakeCompletedProcess()
 
     monkeypatch.setattr(subprocess, "run", fake_run)
@@ -19,6 +22,9 @@ def test_get_clip_duration_seconds_parses_ffprobe_output(monkeypatch):
     duration = get_clip_duration_seconds(Path("fake.mp4"))
 
     assert duration == 12.345
+    assert captured["cmd"][0] == "ffprobe"
+    assert captured["cmd"][-1] == str(Path("fake.mp4"))
+    assert captured["cmd"][captured["cmd"].index("-of") + 1] == "default=noprint_wrappers=1:nokey=1"
 
 
 def test_select_background_picks_long_enough_clip(tmp_path):

@@ -8,7 +8,7 @@ def get_clip_duration_seconds(clip_path: Path) -> float:
         [
             "ffprobe", "-v", "error",
             "-show_entries", "format=duration",
-            "-of", "default=noprint_wrappers=1:nokeyprefix=1",
+            "-of", "default=noprint_wrappers=1:nokey=1",
             str(clip_path),
         ],
         capture_output=True, text=True, check=True,
