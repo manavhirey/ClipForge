@@ -37,16 +37,23 @@ def _text_response(text, stop_reason="end_turn"):
 def test_clean_script_returns_llm_text():
     client = FakeLLMClient(_text_response("Cleaned narration text."))
 
-    result = clean_script("Title", "Body text", client)
+    result = clean_script("My Distinctive Roommate Story", "Body text", client)
 
     assert result == "Cleaned narration text."
-    assert "Title" in client.messages.last_kwargs["messages"][0]["content"]
+    assert "My Distinctive Roommate Story" in client.messages.last_kwargs["messages"][0]["content"]
     assert "Body text" in client.messages.last_kwargs["messages"][0]["content"]
+    assert client.messages.last_kwargs["system"] == SYSTEM_PROMPT
 
 
 def test_system_prompt_instructs_narrating_the_title_first():
     assert "begin the script by narrating the title" in SYSTEM_PROMPT
     assert "Do not invent your own opening hook" in SYSTEM_PROMPT
+
+
+def test_system_prompt_addresses_title_flair_and_duplicate_body_line():
+    assert "AITA" in SYSTEM_PROMPT
+    assert "expand it naturally" in SYSTEM_PROMPT
+    assert "narrate it once" in SYSTEM_PROMPT
 
 
 def test_clean_script_raises_on_empty_response():
