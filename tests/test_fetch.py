@@ -42,7 +42,7 @@ def test_fetch_story_returns_expected_fields():
         "subreddit": "AmItheAsshole",
         "url": url,
     }
-    assert captured["url"] == url.rstrip("/") + ".json"
+    assert captured["url"] == "https://www.reddit.com/r/AmItheAsshole/comments/abc123/my_story.json"
     assert "User-Agent" in captured["headers"]
 
 
@@ -54,12 +54,40 @@ def test_fetch_story_strips_trailing_slash_before_appending_json():
     fetch_story("https://www.reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
 
 
+def test_fetch_story_strips_query_string_before_appending_json():
+    def fake_http_get(url, headers, timeout):
+        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json"
+        return FakeResponse(200, _reddit_payload())
+
+    fetch_story(
+        "https://www.reddit.com/r/test/comments/abc123/x/?utm_source=share&utm_medium=ios_app",
+        http_get=fake_http_get,
+    )
+
+
+def test_fetch_story_does_not_double_append_json_suffix():
+    def fake_http_get(url, headers, timeout):
+        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json"
+        return FakeResponse(200, _reddit_payload())
+
+    fetch_story("https://www.reddit.com/r/test/comments/abc123/x.json", http_get=fake_http_get)
+
+
 def test_fetch_story_raises_on_no_selftext():
     def fake_http_get(url, headers, timeout):
         return FakeResponse(200, _reddit_payload(selftext=""))
 
     with pytest.raises(ValueError, match="no text body"):
         fetch_story("https://reddit.com/r/pics/comments/abc123/img/", http_get=fake_http_get)
+
+
+@pytest.mark.parametrize("placeholder", ["[removed]", "[deleted]"])
+def test_fetch_story_raises_on_removed_or_deleted_body(placeholder):
+    def fake_http_get(url, headers, timeout):
+        return FakeResponse(200, _reddit_payload(selftext=placeholder))
+
+    with pytest.raises(ValueError, match="no text body"):
+        fetch_story("https://reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
 
 
 def test_fetch_story_raises_on_non_200_status():
@@ -75,4 +103,12 @@ def test_fetch_story_raises_on_non_json_response():
         return FakeResponse(200, raise_on_json=True)
 
     with pytest.raises(ValueError, match="did not return JSON"):
+        fetch_story("https://reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
+
+
+def test_fetch_story_raises_clear_error_on_unexpected_json_shape():
+    def fake_http_get(url, headers, timeout):
+        return FakeResponse(200, {"message": "Too Many Requests"})
+
+    with pytest.raises(ValueError, match="unexpected shape"):
         fetch_story("https://reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
