@@ -2,15 +2,12 @@ from clipforge import cli as cli_module
 
 
 def _set_required_env(monkeypatch):
-    monkeypatch.setenv("REDDIT_CLIENT_ID", "rid")
-    monkeypatch.setenv("REDDIT_CLIENT_SECRET", "rsecret")
     monkeypatch.setenv("ELEVENLABS_API_KEY", "ekey")
     monkeypatch.setenv("ELEVENLABS_VOICE_ID", "voice1")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "akey")
 
 
 def _stub_real_clients(monkeypatch):
-    monkeypatch.setattr(cli_module.praw, "Reddit", lambda **kwargs: object())
     monkeypatch.setattr(cli_module.anthropic, "Anthropic", lambda **kwargs: object())
     monkeypatch.setattr(cli_module, "ElevenLabsTTSClient", lambda **kwargs: object())
 
@@ -47,10 +44,7 @@ def test_main_run_prints_error_and_returns_1_on_failure(monkeypatch, capsys):
 
 
 def test_main_run_returns_1_when_env_vars_missing(tmp_path, monkeypatch, capsys):
-    for var in [
-        "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "ELEVENLABS_API_KEY",
-        "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY",
-    ]:
+    for var in ["ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY"]:
         monkeypatch.delenv(var, raising=False)
     monkeypatch.chdir(tmp_path)
 
@@ -61,17 +55,12 @@ def test_main_run_returns_1_when_env_vars_missing(tmp_path, monkeypatch, capsys)
 
 
 def test_main_run_loads_dotenv_file(tmp_path, monkeypatch, capsys):
-    for var in [
-        "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "ELEVENLABS_API_KEY",
-        "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY",
-    ]:
+    for var in ["ELEVENLABS_API_KEY", "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY"]:
         monkeypatch.setenv(var, "placeholder")
         monkeypatch.delenv(var)
 
     env_file = tmp_path / ".env"
     env_file.write_text(
-        "REDDIT_CLIENT_ID=rid\n"
-        "REDDIT_CLIENT_SECRET=rsecret\n"
         "ELEVENLABS_API_KEY=ekey\n"
         "ELEVENLABS_VOICE_ID=voice1\n"
         "ANTHROPIC_API_KEY=akey\n"

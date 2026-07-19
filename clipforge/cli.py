@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import anthropic
-import praw
 from dotenv import find_dotenv, load_dotenv
 
 from clipforge.clients import ElevenLabsTTSClient
@@ -26,16 +25,9 @@ def main(argv=None) -> int:
     if args.command == "run":
         try:
             config = load_config()
-            reddit_client = praw.Reddit(
-                client_id=config.reddit_client_id,
-                client_secret=config.reddit_client_secret,
-                user_agent="clipforge/0.1",
-            )
             llm_client = anthropic.Anthropic(api_key=config.anthropic_api_key)
             tts_client = ElevenLabsTTSClient(api_key=config.elevenlabs_api_key)
-            clients = Clients(
-                reddit=reddit_client, llm=llm_client, tts=tts_client, voice_id=config.elevenlabs_voice_id
-            )
+            clients = Clients(llm=llm_client, tts=tts_client, voice_id=config.elevenlabs_voice_id)
             final_path = run_pipeline(
                 args.url, DEFAULT_OUTPUT_ROOT, DEFAULT_GAMEPLAY_LIBRARY, clients, force=args.force
             )
