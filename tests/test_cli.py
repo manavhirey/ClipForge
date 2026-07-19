@@ -45,6 +45,7 @@ def test_main_run_with_text_file_works_without_reddit_credentials(tmp_path, monk
     monkeypatch.setattr(cli_module, "ElevenLabsTTSClient", lambda **kwargs: object())
     text_file = tmp_path / "story.txt"
     text_file.write_text("My Story\nOnce upon a time... — café – naïve.", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
     expected_path = tmp_path / "final.mp4"
     captured = {}
 
