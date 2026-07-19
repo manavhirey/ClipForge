@@ -70,8 +70,14 @@ def run_pipeline(
 
     final_path = video_dir / "final.mp4"
     if force or not final_path.exists():
-        render(
-            Path(selection["clip"]), selection["offset"], selection["duration"],
-            narration_path, subtitles_path, final_path,
-        )
+        temp_path = video_dir / "final.mp4.tmp"
+        try:
+            render(
+                Path(selection["clip"]), selection["offset"], selection["duration"],
+                narration_path, subtitles_path, temp_path,
+            )
+        except Exception:
+            temp_path.unlink(missing_ok=True)
+            raise
+        temp_path.replace(final_path)
     return final_path
