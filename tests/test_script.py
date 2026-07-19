@@ -1,6 +1,6 @@
 import pytest
 
-from clipforge.stages.script import clean_script
+from clipforge.stages.script import clean_script, SYSTEM_PROMPT
 
 
 class FakeBlock:
@@ -42,6 +42,11 @@ def test_clean_script_returns_llm_text():
     assert result == "Cleaned narration text."
     assert "Title" in client.messages.last_kwargs["messages"][0]["content"]
     assert "Body text" in client.messages.last_kwargs["messages"][0]["content"]
+
+
+def test_system_prompt_instructs_narrating_the_title_first():
+    assert "begin the script by narrating the title" in SYSTEM_PROMPT
+    assert "Do not invent your own opening hook" in SYSTEM_PROMPT
 
 
 def test_clean_script_raises_on_empty_response():
