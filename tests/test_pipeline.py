@@ -19,7 +19,7 @@ def test_extract_post_id_raises_on_invalid_url():
 def test_run_pipeline_writes_all_artifacts_and_skips_on_rerun(tmp_path, monkeypatch):
     calls = {"fetch": 0, "script": 0, "narrate": 0, "background": 0, "subtitles": 0, "render": 0}
 
-    def fake_fetch_story(url):
+    def fake_fetch_story(url, reddit_client):
         calls["fetch"] += 1
         return {"id": "abc123", "title": "T", "body": "B", "subreddit": "s", "url": url}
 
@@ -57,7 +57,7 @@ def test_run_pipeline_writes_all_artifacts_and_skips_on_rerun(tmp_path, monkeypa
     output_root = tmp_path / "output"
     gameplay_library = tmp_path / "assets" / "gameplay"
     gameplay_library.mkdir(parents=True)
-    clients = Clients(llm=object(), tts=object(), voice_id="voice1")
+    clients = Clients(reddit=object(), llm=object(), tts=object(), voice_id="voice1")
     url = "https://www.reddit.com/r/test/comments/abc123/title/"
 
     result_path = run_pipeline(url, output_root, gameplay_library, clients)
@@ -75,7 +75,7 @@ def test_run_pipeline_writes_all_artifacts_and_skips_on_rerun(tmp_path, monkeypa
 def test_run_pipeline_does_not_leave_partial_final_mp4_on_render_failure(tmp_path, monkeypatch):
     calls = {"render": 0}
 
-    def fake_fetch_story(url):
+    def fake_fetch_story(url, reddit_client):
         return {"id": "abc123", "title": "T", "body": "B", "subreddit": "s", "url": url}
 
     def fake_clean_script(title, body, llm_client):
@@ -108,7 +108,7 @@ def test_run_pipeline_does_not_leave_partial_final_mp4_on_render_failure(tmp_pat
     output_root = tmp_path / "output"
     gameplay_library = tmp_path / "assets" / "gameplay"
     gameplay_library.mkdir(parents=True)
-    clients = Clients(llm=object(), tts=object(), voice_id="voice1")
+    clients = Clients(reddit=object(), llm=object(), tts=object(), voice_id="voice1")
     url = "https://www.reddit.com/r/test/comments/abc123/title/"
 
     with pytest.raises(RuntimeError, match="ffmpeg crashed"):
@@ -127,7 +127,7 @@ def test_run_pipeline_does_not_leave_partial_final_mp4_on_render_failure(tmp_pat
 def test_run_pipeline_temp_render_path_keeps_mp4_extension(tmp_path, monkeypatch):
     captured = {}
 
-    def fake_fetch_story(url):
+    def fake_fetch_story(url, reddit_client):
         return {"id": "abc123", "title": "T", "body": "B", "subreddit": "s", "url": url}
 
     def fake_clean_script(title, body, llm_client):
@@ -157,7 +157,7 @@ def test_run_pipeline_temp_render_path_keeps_mp4_extension(tmp_path, monkeypatch
     output_root = tmp_path / "output"
     gameplay_library = tmp_path / "assets" / "gameplay"
     gameplay_library.mkdir(parents=True)
-    clients = Clients(llm=object(), tts=object(), voice_id="voice1")
+    clients = Clients(reddit=object(), llm=object(), tts=object(), voice_id="voice1")
     url = "https://www.reddit.com/r/test/comments/abc123/title/"
 
     run_pipeline(url, output_root, gameplay_library, clients)

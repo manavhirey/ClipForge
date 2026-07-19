@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "AI pipeline converting Reddit stories into portrait short-form videos"
 requires-python = ">=3.9"
 dependencies = [
-    "requests>=2.31",
+    "praw>=7.7",
     "anthropic>=0.40",
     "elevenlabs>=1.9",
     "python-dotenv>=1.0",

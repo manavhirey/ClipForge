@@ -13,6 +13,7 @@ from clipforge.stages.subtitles import build_ass
 
 @dataclass
 class Clients:
+    reddit: object
     llm: object
     tts: object
     voice_id: str
@@ -34,7 +35,7 @@ def run_pipeline(
 
     story_path = video_dir / "story.json"
     if force or not story_path.exists():
-        story = fetch_story(url)
+        story = fetch_story(url, clients.reddit)
         story_path.write_text(json.dumps(story))
     else:
         story = json.loads(story_path.read_text())
