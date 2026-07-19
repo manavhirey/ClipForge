@@ -1,12 +1,16 @@
 from clipforge import cli as cli_module
 
 
-def _set_required_env(monkeypatch):
-    monkeypatch.setenv("REDDIT_CLIENT_ID", "rid")
-    monkeypatch.setenv("REDDIT_CLIENT_SECRET", "rsecret")
+def _set_non_reddit_env(monkeypatch):
     monkeypatch.setenv("ELEVENLABS_API_KEY", "ekey")
     monkeypatch.setenv("ELEVENLABS_VOICE_ID", "voice1")
     monkeypatch.setenv("ANTHROPIC_API_KEY", "akey")
+
+
+def _set_required_env(monkeypatch):
+    monkeypatch.setenv("REDDIT_CLIENT_ID", "rid")
+    monkeypatch.setenv("REDDIT_CLIENT_SECRET", "rsecret")
+    _set_non_reddit_env(monkeypatch)
 
 
 def _stub_real_clients(monkeypatch):
@@ -31,16 +35,22 @@ def test_main_run_prints_done_path_on_success(tmp_path, monkeypatch, capsys):
     assert f"Done: {expected_path}" in capsys.readouterr().out
 
 
-def test_main_run_with_text_file_calls_run_pipeline_from_text(tmp_path, monkeypatch, capsys):
-    _set_required_env(monkeypatch)
-    _stub_real_clients(monkeypatch)
+def test_main_run_with_text_file_works_without_reddit_credentials(tmp_path, monkeypatch, capsys):
+    for var in ["REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET"]:
+        monkeypatch.delenv(var, raising=False)
+    _set_non_reddit_env(monkeypatch)
+    reddit_calls = []
+    monkeypatch.setattr(cli_module.praw, "Reddit", lambda **kwargs: reddit_calls.append(kwargs))
+    monkeypatch.setattr(cli_module.anthropic, "Anthropic", lambda **kwargs: object())
+    monkeypatch.setattr(cli_module, "ElevenLabsTTSClient", lambda **kwargs: object())
     text_file = tmp_path / "story.txt"
-    text_file.write_text("My Story\nOnce upon a time...")
+    text_file.write_text("My Story\nOnce upon a time... — café – naïve.", encoding="utf-8")
     expected_path = tmp_path / "final.mp4"
     captured = {}
 
     def fake_run_pipeline_from_text(text, output_root, gameplay_library, clients, force=False):
         captured["text"] = text
+        captured["reddit_client"] = clients.reddit
         return expected_path
 
     monkeypatch.setattr(cli_module, "run_pipeline_from_text", fake_run_pipeline_from_text)
@@ -48,7 +58,9 @@ def test_main_run_with_text_file_calls_run_pipeline_from_text(tmp_path, monkeypa
     exit_code = cli_module.main(["run", "--text-file", str(text_file)])
 
     assert exit_code == 0
-    assert captured["text"] == "My Story\nOnce upon a time..."
+    assert captured["text"] == "My Story\nOnce upon a time... — café – naïve."
+    assert captured["reddit_client"] is None
+    assert reddit_calls == []
     assert f"Done: {expected_path}" in capsys.readouterr().out
 
 

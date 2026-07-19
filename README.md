@@ -6,7 +6,7 @@ AI pipeline converting Reddit stories into portrait short-form videos (YT Shorts
 
 1. `python3 -m venv .venv && source .venv/bin/activate`
 2. `pip install -e ".[dev]"`
-3. Copy `.env.example` to `.env` and fill in `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET`, `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ANTHROPIC_API_KEY`.
+3. Copy `.env.example` to `.env` and fill in `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID`, `ANTHROPIC_API_KEY`. `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` are only required if you're running with a Reddit URL — skip them entirely if you'll only ever use `--text-file`.
 4. Install `ffmpeg` (provides both `ffmpeg` and `ffprobe`) and make sure it's on your `PATH`.
 5. Drop one or more gameplay `.mp4` files into `assets/gameplay/`.
 
@@ -16,7 +16,7 @@ AI pipeline converting Reddit stories into portrait short-form videos (YT Shorts
 clipforge run https://www.reddit.com/r/AmItheAsshole/comments/<id>/<slug>/
 ```
 
-Or, to skip Reddit entirely and supply the story yourself, save it to a text file (first line = title, the rest = body) and run:
+Or, to skip Reddit entirely (no `REDDIT_CLIENT_ID`/`REDDIT_CLIENT_SECRET` needed) and supply the story yourself, save it to a text file (first line = title, the rest = body) and run:
 
 ```bash
 clipforge run --text-file story.txt

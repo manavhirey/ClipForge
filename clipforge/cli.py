@@ -31,23 +31,25 @@ def main(argv=None) -> int:
         try:
             if bool(args.url) == bool(args.text_file):
                 raise ValueError("Provide exactly one of a Reddit URL or --text-file")
-            config = load_config()
-            reddit_client = praw.Reddit(
-                client_id=config.reddit_client_id,
-                client_secret=config.reddit_client_secret,
-                user_agent="clipforge/0.1",
-            )
+            config = load_config(require_reddit=args.text_file is None)
             llm_client = anthropic.Anthropic(api_key=config.anthropic_api_key)
             tts_client = ElevenLabsTTSClient(api_key=config.elevenlabs_api_key)
-            clients = Clients(
-                reddit=reddit_client, llm=llm_client, tts=tts_client, voice_id=config.elevenlabs_voice_id
-            )
             if args.text_file:
-                text = args.text_file.read_text()
+                text = args.text_file.read_text(encoding="utf-8")
+                clients = Clients(reddit=None, llm=llm_client, tts=tts_client, voice_id=config.elevenlabs_voice_id)
                 final_path = run_pipeline_from_text(
                     text, DEFAULT_OUTPUT_ROOT, DEFAULT_GAMEPLAY_LIBRARY, clients, force=args.force
                 )
             else:
+                reddit_client = praw.Reddit(
+                    client_id=config.reddit_client_id,
+                    client_secret=config.reddit_client_secret,
+                    user_agent="clipforge/0.1",
+                    check_for_updates=False,
+                )
+                clients = Clients(
+                    reddit=reddit_client, llm=llm_client, tts=tts_client, voice_id=config.elevenlabs_voice_id
+                )
                 final_path = run_pipeline(
                     args.url, DEFAULT_OUTPUT_ROOT, DEFAULT_GAMEPLAY_LIBRARY, clients, force=args.force
                 )
