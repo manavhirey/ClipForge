@@ -16,7 +16,13 @@ AI pipeline converting Reddit stories into portrait short-form videos (YT Shorts
 clipforge run https://www.reddit.com/r/AmItheAsshole/comments/<id>/<slug>/
 ```
 
-Output is written to `output/<post-id>/final.mp4`. Rerunning the same URL skips stages whose artifacts already exist; pass `--force` to redo every stage.
+Or, to skip Reddit entirely and supply the story yourself, save it to a text file (first line = title, the rest = body) and run:
+
+```bash
+clipforge run --text-file story.txt
+```
+
+Provide exactly one of the URL or `--text-file` — not both, not neither. Output is written to `output/<id>/final.mp4` (the Reddit post ID for URL runs, or a content hash of the text for `--text-file` runs — so re-running the exact same text reuses the same output directory). Rerunning skips stages whose artifacts already exist; pass `--force` to redo every stage.
 
 ## Manual smoke test
 

@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from clipforge.stages.background import get_clip_duration_seconds, select_background
-from clipforge.stages.fetch import fetch_story
+from clipforge.stages.fetch import fetch_story, fetch_story_from_text
 from clipforge.stages.narrate import narrate
 from clipforge.stages.render import render
 from clipforge.stages.script import clean_script
@@ -26,16 +26,15 @@ def extract_post_id(url: str) -> str:
     return match.group(1)
 
 
-def run_pipeline(
-    url: str, output_root: Path, gameplay_library: Path, clients: Clients, force: bool = False
+def _run_pipeline_stages(
+    post_id: str, fetch, output_root: Path, gameplay_library: Path, clients: Clients, force: bool
 ) -> Path:
-    post_id = extract_post_id(url)
     video_dir = output_root / post_id
     video_dir.mkdir(parents=True, exist_ok=True)
 
     story_path = video_dir / "story.json"
     if force or not story_path.exists():
-        story = fetch_story(url, clients.reddit)
+        story = fetch()
         story_path.write_text(json.dumps(story))
     else:
         story = json.loads(story_path.read_text())
@@ -81,3 +80,21 @@ def run_pipeline(
             raise
         temp_path.replace(final_path)
     return final_path
+
+
+def run_pipeline(
+    url: str, output_root: Path, gameplay_library: Path, clients: Clients, force: bool = False
+) -> Path:
+    post_id = extract_post_id(url)
+    return _run_pipeline_stages(
+        post_id, lambda: fetch_story(url, clients.reddit), output_root, gameplay_library, clients, force,
+    )
+
+
+def run_pipeline_from_text(
+    text: str, output_root: Path, gameplay_library: Path, clients: Clients, force: bool = False
+) -> Path:
+    story = fetch_story_from_text(text)
+    return _run_pipeline_stages(
+        story["id"], lambda: story, output_root, gameplay_library, clients, force,
+    )
