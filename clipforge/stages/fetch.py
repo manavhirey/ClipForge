@@ -11,7 +11,7 @@ def _to_json_url(url: str) -> str:
     path = parts.path.rstrip("/")
     if not path.endswith(".json"):
         path += ".json"
-    return urlunsplit((parts.scheme, parts.netloc, path, "", ""))
+    return urlunsplit((parts.scheme, parts.netloc, path, "raw_json=1", ""))
 
 
 def fetch_story(url: str, http_get=requests.get) -> dict:
@@ -40,7 +40,7 @@ def fetch_story(url: str, http_get=requests.get) -> dict:
             "subreddit": post["subreddit"],
             "url": url,
         }
-    except (KeyError, IndexError, TypeError) as exc:
+    except (KeyError, IndexError, TypeError, AttributeError) as exc:
         raise ValueError(f"Reddit returned JSON in an unexpected shape for {url}") from exc
 
     if not body or body in REMOVED_PLACEHOLDERS:

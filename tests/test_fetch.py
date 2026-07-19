@@ -42,13 +42,13 @@ def test_fetch_story_returns_expected_fields():
         "subreddit": "AmItheAsshole",
         "url": url,
     }
-    assert captured["url"] == "https://www.reddit.com/r/AmItheAsshole/comments/abc123/my_story.json"
+    assert captured["url"] == "https://www.reddit.com/r/AmItheAsshole/comments/abc123/my_story.json?raw_json=1"
     assert "User-Agent" in captured["headers"]
 
 
 def test_fetch_story_strips_trailing_slash_before_appending_json():
     def fake_http_get(url, headers, timeout):
-        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json"
+        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json?raw_json=1"
         return FakeResponse(200, _reddit_payload())
 
     fetch_story("https://www.reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
@@ -56,7 +56,7 @@ def test_fetch_story_strips_trailing_slash_before_appending_json():
 
 def test_fetch_story_strips_query_string_before_appending_json():
     def fake_http_get(url, headers, timeout):
-        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json"
+        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json?raw_json=1"
         return FakeResponse(200, _reddit_payload())
 
     fetch_story(
@@ -67,10 +67,20 @@ def test_fetch_story_strips_query_string_before_appending_json():
 
 def test_fetch_story_does_not_double_append_json_suffix():
     def fake_http_get(url, headers, timeout):
-        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json"
+        assert url == "https://www.reddit.com/r/test/comments/abc123/x.json?raw_json=1"
         return FakeResponse(200, _reddit_payload())
 
     fetch_story("https://www.reddit.com/r/test/comments/abc123/x.json", http_get=fake_http_get)
+
+
+def test_fetch_story_requests_raw_json_to_avoid_html_entity_encoding():
+    def fake_http_get(url, headers, timeout):
+        assert "raw_json=1" in url
+        return FakeResponse(200, _reddit_payload(selftext="It wasn't my fault & I told them so."))
+
+    result = fetch_story("https://www.reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
+
+    assert result["body"] == "It wasn't my fault & I told them so."
 
 
 def test_fetch_story_raises_on_no_selftext():
@@ -109,6 +119,17 @@ def test_fetch_story_raises_on_non_json_response():
 def test_fetch_story_raises_clear_error_on_unexpected_json_shape():
     def fake_http_get(url, headers, timeout):
         return FakeResponse(200, {"message": "Too Many Requests"})
+
+    with pytest.raises(ValueError, match="unexpected shape"):
+        fetch_story("https://reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
+
+
+def test_fetch_story_raises_clear_error_when_post_data_is_not_a_dict():
+    def fake_http_get(url, headers, timeout):
+        return FakeResponse(200, [
+            {"data": {"children": [{"data": "unexpected string instead of a dict"}]}},
+            {"data": {"children": []}},
+        ])
 
     with pytest.raises(ValueError, match="unexpected shape"):
         fetch_story("https://reddit.com/r/test/comments/abc123/x/", http_get=fake_http_get)
