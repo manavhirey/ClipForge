@@ -11,8 +11,8 @@ class FakeAlignment:
 
 
 class FakeResult:
-    def __init__(self, audio_base64, alignment):
-        self.audio_base64 = audio_base64
+    def __init__(self, audio_base_64, alignment):
+        self.audio_base_64 = audio_base_64
         self.alignment = alignment
 
 
@@ -34,7 +34,7 @@ class FakeSDKClient:
 def test_convert_with_timestamps_decodes_audio_and_reshapes_alignment():
     audio_b64 = base64.b64encode(b"FAKEAUDIO").decode()
     fake_result = FakeResult(
-        audio_base64=audio_b64,
+        audio_base_64=audio_b64,
         alignment=FakeAlignment(["h", "i"], [0.0, 0.1], [0.1, 0.2]),
     )
     sdk_client = FakeSDKClient(fake_result)

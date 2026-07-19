@@ -14,7 +14,7 @@ class ElevenLabsTTSClient:
             model_id="eleven_multilingual_v2",
         )
         return {
-            "audio_bytes": base64.b64decode(result.audio_base64),
+            "audio_bytes": base64.b64decode(result.audio_base_64),
             "alignment": {
                 "characters": result.alignment.characters,
                 "character_start_times_seconds": result.alignment.character_start_times_seconds,
