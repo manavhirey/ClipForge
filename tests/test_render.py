@@ -53,4 +53,4 @@ def test_build_ffmpeg_command_escapes_special_characters_in_subtitles_path():
 
     filter_complex = cmd[cmd.index("-filter_complex") + 1]
 
-    assert "ass='weird\\:path\\'s.ass'" in filter_complex
+    assert "ass='weird\\:path\\'\\''s.ass'" in filter_complex

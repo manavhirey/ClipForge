@@ -4,7 +4,7 @@ from pathlib import Path
 
 def _escape_ffmpeg_path(path: Path) -> str:
     escaped = str(path).replace("\\", "\\\\").replace(":", "\\:").replace("'", "\\'")
-    return f"'{escaped}'"
+    return "'" + escaped.replace("'", "'\\''") + "'"
 
 
 def build_ffmpeg_command(
