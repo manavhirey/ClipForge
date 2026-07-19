@@ -122,3 +122,44 @@ def test_run_pipeline_does_not_leave_partial_final_mp4_on_render_failure(tmp_pat
     assert result_path == final_path
     assert result_path.read_bytes() == b"VIDEO"
     assert calls["render"] == 2
+
+
+def test_run_pipeline_temp_render_path_keeps_mp4_extension(tmp_path, monkeypatch):
+    captured = {}
+
+    def fake_fetch_story(url, reddit_client):
+        return {"id": "abc123", "title": "T", "body": "B", "subreddit": "s", "url": url}
+
+    def fake_clean_script(title, body, llm_client):
+        return "Cleaned script."
+
+    def fake_narrate(script_text, tts_client, voice_id):
+        return b"AUDIO", [{"word": "Cleaned", "start": 0.0, "end": 0.3}]
+
+    def fake_select_background(narration_duration, library_dir, get_duration):
+        return {"clip": str(library_dir / "clip.mp4"), "offset": 1.0, "duration": narration_duration}
+
+    def fake_build_ass(word_timestamps):
+        return "ASS CONTENT"
+
+    def capturing_render(clip, offset, duration, narration_path, subtitles_path, output_path):
+        captured["output_path"] = output_path
+        output_path.write_bytes(b"VIDEO")
+        return output_path
+
+    monkeypatch.setattr(pipeline_module, "fetch_story", fake_fetch_story)
+    monkeypatch.setattr(pipeline_module, "clean_script", fake_clean_script)
+    monkeypatch.setattr(pipeline_module, "narrate", fake_narrate)
+    monkeypatch.setattr(pipeline_module, "select_background", fake_select_background)
+    monkeypatch.setattr(pipeline_module, "build_ass", fake_build_ass)
+    monkeypatch.setattr(pipeline_module, "render", capturing_render)
+
+    output_root = tmp_path / "output"
+    gameplay_library = tmp_path / "assets" / "gameplay"
+    gameplay_library.mkdir(parents=True)
+    clients = Clients(reddit=object(), llm=object(), tts=object(), voice_id="voice1")
+    url = "https://www.reddit.com/r/test/comments/abc123/title/"
+
+    run_pipeline(url, output_root, gameplay_library, clients)
+
+    assert captured["output_path"].suffix == ".mp4"

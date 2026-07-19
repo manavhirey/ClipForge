@@ -4,6 +4,7 @@ from pathlib import Path
 
 import anthropic
 import praw
+from dotenv import find_dotenv, load_dotenv
 
 from clipforge.clients import ElevenLabsTTSClient
 from clipforge.config import load_config
@@ -14,6 +15,7 @@ DEFAULT_GAMEPLAY_LIBRARY = Path("assets/gameplay")
 
 
 def main(argv=None) -> int:
+    load_dotenv(find_dotenv(usecwd=True))
     parser = argparse.ArgumentParser(prog="clipforge")
     subparsers = parser.add_subparsers(dest="command", required=True)
     run_parser = subparsers.add_parser("run", help="Generate a video from a Reddit post URL")

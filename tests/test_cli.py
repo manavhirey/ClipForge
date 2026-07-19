@@ -57,3 +57,34 @@ def test_main_run_returns_1_when_env_vars_missing(monkeypatch, capsys):
 
     assert exit_code == 1
     assert "Missing required environment variables" in capsys.readouterr().err
+
+
+def test_main_run_loads_dotenv_file(tmp_path, monkeypatch, capsys):
+    for var in [
+        "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "ELEVENLABS_API_KEY",
+        "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY",
+    ]:
+        monkeypatch.delenv(var, raising=False)
+
+    env_file = tmp_path / ".env"
+    env_file.write_text(
+        "REDDIT_CLIENT_ID=rid\n"
+        "REDDIT_CLIENT_SECRET=rsecret\n"
+        "ELEVENLABS_API_KEY=ekey\n"
+        "ELEVENLABS_VOICE_ID=voice1\n"
+        "ANTHROPIC_API_KEY=akey\n"
+    )
+    monkeypatch.chdir(tmp_path)
+
+    _stub_real_clients(monkeypatch)
+    expected_path = tmp_path / "final.mp4"
+
+    def fake_run_pipeline(url, output_root, gameplay_library, clients, force=False):
+        return expected_path
+
+    monkeypatch.setattr(cli_module, "run_pipeline", fake_run_pipeline)
+
+    exit_code = cli_module.main(["run", "https://www.reddit.com/r/test/comments/abc123/x/"])
+
+    assert exit_code == 0
+    assert f"Done: {expected_path}" in capsys.readouterr().out

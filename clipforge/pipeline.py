@@ -70,7 +70,7 @@ def run_pipeline(
 
     final_path = video_dir / "final.mp4"
     if force or not final_path.exists():
-        temp_path = video_dir / "final.mp4.tmp"
+        temp_path = video_dir / "final.tmp.mp4"
         try:
             render(
                 Path(selection["clip"]), selection["offset"], selection["duration"],
