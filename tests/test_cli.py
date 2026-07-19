@@ -46,12 +46,13 @@ def test_main_run_prints_error_and_returns_1_on_failure(monkeypatch, capsys):
     assert "Error: ffmpeg render failed: boom" in capsys.readouterr().err
 
 
-def test_main_run_returns_1_when_env_vars_missing(monkeypatch, capsys):
+def test_main_run_returns_1_when_env_vars_missing(tmp_path, monkeypatch, capsys):
     for var in [
         "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "ELEVENLABS_API_KEY",
         "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY",
     ]:
         monkeypatch.delenv(var, raising=False)
+    monkeypatch.chdir(tmp_path)
 
     exit_code = cli_module.main(["run", "https://www.reddit.com/r/test/comments/abc123/x/"])
 
@@ -64,7 +65,8 @@ def test_main_run_loads_dotenv_file(tmp_path, monkeypatch, capsys):
         "REDDIT_CLIENT_ID", "REDDIT_CLIENT_SECRET", "ELEVENLABS_API_KEY",
         "ELEVENLABS_VOICE_ID", "ANTHROPIC_API_KEY",
     ]:
-        monkeypatch.delenv(var, raising=False)
+        monkeypatch.setenv(var, "placeholder")
+        monkeypatch.delenv(var)
 
     env_file = tmp_path / ".env"
     env_file.write_text(
